@@ -1,0 +1,29 @@
+{
+    "name": "shagabutdinov/moka",
+
+    "authors": [
+        {
+            "name": "Leonid Shagabutdinov",
+            "email": "leonid@shagabutdinov.ru"
+        }
+    ],
+
+    "type": "package",
+    "minimum-stability": "stable",
+
+    "source": {
+        "url": "git://github.com/shagabutdinov/moka.git",
+        "type": "git",
+        "reference": "master"
+    },
+
+    "require-dev": {
+        "phpunit/phpunit": "5.1.*"
+    },
+
+    "autoload": {
+        "psr-0" : {
+            "shagabutdinov" : "src"
+        }
+    }
+}

@@ -1,0 +1,7 @@
+moka:
+  build: ./
+  dockerfile: ./Dockerfile
+  container_name: test.moka.shagabutdinov.ru
+  environment: ['PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/app/vendor/bin']
+  entrypoint: ['guard', '-i', '-G', 'Guardfile']
+  volumes: ['./:/app']
