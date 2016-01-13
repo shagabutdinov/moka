@@ -22,8 +22,8 @@
     },
 
     "autoload": {
-        "psr-0" : {
-            "shagabutdinov" : "src"
+        "psr-4" : {
+            "shagabutdinov\\" : "src/"
         }
     }
 }

@@ -38,12 +38,6 @@ class StubTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('RESULT', $this->_object->invoke([]));
     }
 
-    public function testInvokeReturnsCallsCount()
-    {
-        $this->_object->add(new StubTest_CallStub(true, 'RESULT'));
-        $this->_object->invoke([]);
-        $this->assertEquals(1, $this->_object->calls());
-    }
 
     public function testInvokeReturnsCallArgs()
     {

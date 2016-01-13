@@ -8,14 +8,13 @@ class Moka
 
     public static function spy($result = '__UNDEFINED__')
     {
-        return \shagabutdinov\moka\Spy::factory($result);
+        return moka\Spy::factory($result);
     }
 
     public static function stub($parent = null, $methods = [])
     {
         $class = self::stubClass($parent, $methods);
         $result = new $class();
-        // self::_setMokaValues($result->moka(), $methods);
         return $result;
     }
 
@@ -24,7 +23,6 @@ class Moka
         $class = self::mockClass($parent, $methods);
         $reflection = new \ReflectionClass($class);
         $result = $reflection->newInstanceArgs($args);
-        // self::_setMokaValues($result->moka(), $methods);
         return $result;
     }
 
@@ -127,7 +125,7 @@ DEFINITION;
         $result = '';
         $methods = self::_createInitialMethods($methods);
 
-        if($isStub && $reflection !== null) {
+        if($reflection !== null) {
             foreach($reflection->getMethods() as $method) {
                 if(!$method->isPublic() || $method->isFinal()) {
                     continue;
@@ -140,7 +138,9 @@ DEFINITION;
 
                 $args = self::_createMethodArguments($method);
 
-                $methods[$name] = [$name, implode(', ', $args)];
+                if(isset($methods[$name]) || $isStub) {
+                    $methods[$name] = [$name, implode(', ', $args)];
+                }
             }
         }
 

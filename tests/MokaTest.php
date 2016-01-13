@@ -211,6 +211,14 @@ class MokaTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('INVOKE', $class::callStatic('ARG'));
     }
 
+    // mock methods with mull
+
+    public function testMockWithNull()
+    {
+        $mock = $this->_mock(self::HELPER, ['methodWithNull' => true]);
+        $this->assertEquals('INVOKE', $mock->methodWithNull());
+    }
+
 }
 
 class MokaTest_Helper
@@ -233,6 +241,10 @@ class MokaTest_Helper
     }
 
     public function methodWithDefault($result = 'RESULT')
+    {
+    }
+
+    public function methodWithNull($result = null)
     {
     }
 
