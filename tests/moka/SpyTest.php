@@ -4,7 +4,6 @@ namespace shagabutdinov\moka;
 
 class SpyTest extends \PHPUnit_Framework_TestCase
 {
-
     public function setUp()
     {
         $this->_stubs = \shagabutdinov\Moka::stub(null, [
@@ -42,14 +41,13 @@ class SpyTest extends \PHPUnit_Framework_TestCase
 
     public function testStubsReturnsStubsResult()
     {
-        $this->assertEquals('INVOKE', ($this->_object)());
+        $this->assertEquals('INVOKE', call_user_func_array($this->_object, []));
     }
 
     public function testInvokeCallsInvokeWithArgs()
     {
-        ($this->_object)('ARG');
+        call_user_func_array($this->_object, ['ARG']);
         $actual = $this->_stubs->moka()->report('invoke')[0];
         $this->assertEquals(['invoke', ['ARG']], $actual);
     }
-
 }

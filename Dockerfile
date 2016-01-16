@@ -1,4 +1,4 @@
-FROM php
+FROM php:latest
 
 WORKDIR /app
 

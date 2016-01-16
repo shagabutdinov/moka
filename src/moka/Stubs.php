@@ -13,10 +13,10 @@ class Stubs
     public static function factory()
     {
         return new self([
-            'create_stub_class' => function($method) {
+            'create_stub_class' => function ($method) {
                 return new \shagabutdinov\moka\Stub($method);
             },
-            'create_call_class' => function($stub) {
+            'create_call_class' => function ($stub) {
                 return new \shagabutdinov\moka\Call($stub);
             },
         ]);
@@ -30,11 +30,18 @@ class Stubs
 
     public function stubs($method)
     {
-        if(empty($this->_stubs[$method])) {
-            $this->_stubs[$method] = ($this->_createStubClass)($method);
+        if (empty($this->_stubs[$method])) {
+            $this->_stubs[$method] = call_user_func_array(
+                $this->_createStubClass,
+                [$method]
+            );
         }
 
-        $call = ($this->_createCallClass)($this->_stubs[$method]);
+        $call = call_user_func_array(
+            $this->_createCallClass,
+            [$this->_stubs[$method]]
+        );
+
         $this->_stubs[$method]->add($call);
         return $call;
     }
@@ -42,7 +49,7 @@ class Stubs
 
     public function report($method)
     {
-        if(empty($this->_stubs[$method])) {
+        if (empty($this->_stubs[$method])) {
             return null;
         }
 
@@ -51,7 +58,7 @@ class Stubs
 
     public function invoke($method, $args)
     {
-        if(empty($this->_stubs[$method])) {
+        if (empty($this->_stubs[$method])) {
             throw new Error('method "' . $method . '" is not stubbed');
         }
 
@@ -65,11 +72,10 @@ class Stubs
 
     public function instance($number = 0)
     {
-        if(empty($this->_instances[$number])) {
+        if (empty($this->_instances[$number])) {
             throw new Error('instance #' . $number . ' was not created');
         }
 
         return $this->_instances[$number];
     }
-
 }

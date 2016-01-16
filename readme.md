@@ -3,6 +3,12 @@ Moka: php moking library
 
 The php mocking library.
 
+Status
+------
+
+![build status](https://travis-ci.org/shagabutdinov/moka.svg?branch=master)
+
+
 Features
 --------
 
@@ -79,7 +85,7 @@ $classStub::moka->report('method1'); // [['ARG1'], ['ARG2']]
 Examples
 --------
 
-Create object with method 'METHOD' that returns 'RESULT':
+Create object with method `METHOD` that returns `RESULT`:
 
 ```
 $stub = \shagabutdinov\Moka::stub(null, ['method' => 'RESULT']);
@@ -216,49 +222,238 @@ $spy->stubs()->with('ARG')->returns('RESULT');
 $this->assertEquals('RESULT', $spy('ARG'));
 ```
 
+Use cases
+---------
+
+
+### Testing objects that calls static methods
+
+It is difficult to test classes that call static methods of other classes.
+For example there is `UsersController` that calls `User::find`:
+
+```
+class UsersController
+{
+
+    public function main()
+    {
+        // There are rumors that static methods are forbidden in some php teams...
+        return json_encode(User::find(1));
+    }
+}
+
+```
+
+Here is how can you test it using `moka`:
+
+```
+class UsersController
+{
+    private $_userClass;
+
+    public function __construct($userClass = 'User')
+    {
+        $this->_userClass = $userClass;
+    }
+
+    public function find($id)
+    {
+        return json_encode($this->_userClass::find($id));
+    }
+}
+
+class UsersControllerTest extends \PHPUnit_Framework_TestCase
+{
+    public function testMainReturnsUser()
+    {
+        $userClass = \shagabutdinov\Moka::stubClass(null, ['::find' => 'USER']);
+        $controller = new UsersController($userClass);
+        $this->assertEquals('"USER"', $controller->find(1000));
+    }
+
+    public function testMainCallsFind()
+    {
+        $userClass = \shagabutdinov\Moka::stubClass(null, ['::find' => 'USER']);
+        $controller = new UsersController($userClass);
+        $controller->find(1000);
+        // check that `find` was called with 100
+        $this->assertEquals([1000], $userClass::$moka->report('find')[0]);
+    }
+}
+```
+
+Note that there is no need to stub `json_encode` as its considered to be stable,
+covered with tests on php side, isolated from envirenoment and fast enough to
+not slow down rest of tests.
+
+Syntax `$this->_userClass::find($id)` is available only for `php 7`; in earlier
+version you should do: `call_user_func_array([$this->_userClass, 'find'], [$id])`
+
+
+### Testing objects that calls functions
+
+It is difficult to test classes that call functions. For example there is
+`UserData` that calls `file_get_contents`:
+
+```
+class UserData
+{
+    const DATA_PATH = '/data';
+
+    public function get($id)
+    {
+        $path = self::DATA_PATH . '/' . $id . '.json';
+        return json_decode(file_get_contents($path));
+    }
+}
+```
+
+Here is how can you test it using `moka`:
+
+```
+class UserData
+{
+    const DATA_PATH = '/data';
+    private $_fileGetContents;
+
+    public function __construct($fileGetContents = 'file_get_contents')
+    {
+        $this->_fileGetContents = $fileGetContents;
+    }
+
+    public function get($id)
+    {
+        // note parenthesis around $this->_fileGetContents in order to function
+        $path = self::DATA_PATH . '/' . $id . '.json';
+        return json_decode(($this->_fileGetContents)($path));
+    }
+}
+
+class UserDataTest extends \PHPUnit_Framework_TestCase
+{
+    public function testGetReturnsFileContents()
+    {
+        $fileGetContents = \shagabutdinov\Moka::spy('"USER"');
+        $userData = new UserData($fileGetContents);
+        $this->assertEquals('USER', $userData->get(1000));
+    }
+
+    public function testGetCallsFileGetContentsWithUserId()
+    {
+        $fileGetContents = \shagabutdinov\Moka::spy('"USER"');
+        $userData = new UserData($fileGetContents);
+        $userData->get(1000);
+        $this->assertEquals(['/data/1000.json'], $fileGetContents->report()[0]);
+    }
+}
+```
+
+
+### Objects with a lot of dependencies
+
+It is not recommended to create objects with a lot of dependecies, but therefore
+everybody does it (almost each framework and developer). There is a way to do
+that by grouping dependecies in array:
+
+```
+class MyClass
+{
+    private $_userClass;
+    private $_roleClass;
+    private $_otherClass;
+
+    public function __construct($arg1, $arg2, $dependecies = [
+        'user_class' => 'User',
+        'role_class' => 'Role',
+        'other_class' => 'Other',
+    ])
+    {
+        $this->_userClass = $dependecies['user_class'];
+        $this->_roleClass = $dependecies['role_class'];
+        $this->_otherClass = $dependecies['other_class'];
+
+        // ...
+    }
+}
+```
+
+
+### Testing static methods
+
+We do not create classes with static methods that calls external dependencies
+(but decorators allowed and we do not test it) in `shagabutdinov`, but only use such
+classes. So `moka` does not support such kind of testing:
+
+
+```
+class MyClassWithStaticMethods
+{
+
+    public static function call()
+    {
+        OtherClass::call(); // unmokable with moka
+    }
+
+}
+```
+
+You can contact us in order to add support for such testing.
+
+
 Faq
 ---
 
-  > How does it work?
+> How does it work?
 
-  It creates php code for each mock, stub, mockClass or stubClass call and
-  evaluates it through php `eval` function.
+It creates php code for each `mock`, `stub`, `mockClass` or `stubClass` call
+and evaluates it through php `eval` function.
 
-  > Can I have report for methods without stubbing/mocking it?
-  >
-  > ```
-  > $class = \shagabutdinov\Moka::mockClass('\shagabutdinov\Moka', []);
-  > $class::spy('ARG');
-  > $class::$moka->report('spy'); // []
-  > ```
+> Which version of php are required?
 
-  No, you can not; you have to always stub or mock instance or class in order to
-  see it arguments. Note that observing for function without replacing it
-  behaviour is considered as bad practice in shagabutdinov, so moka does not allow to
-  do this.
+It should works with `php >= 5.6`, but but if you use [type hinting](http://php.net/manual/en/functions.arguments.php#functions.arguments.type-declaration)
+`php 7` is required. It also should work with `php >= 5.4` but we don't test it
+as phpunit does not support this version of php.
 
-  Correct example:
+> Can I have report for methods without stubbing/mocking it?
+>
+> ```
+> $class = \shagabutdinov\Moka::mockClass('\shagabutdinov\Moka', []);
+> $class::spy('ARG');
+> $class::$moka->report('spy'); // []
+> ```
 
-  ```
-  $class = \shagabutdinov\Moka::mockClass('\shagabutdinov\Moka', ['spy' => 'MySpy']);
-  $class::spy('ARG');
-  $class::$moka->report('spy'); // [['ARG']]
-  ```
+No, you can not; you have to always stub or mock instance or class in order to
+see it arguments. Note that observing for function without replacing it
+behaviour is considered as bad practice in shagabutdinov, so moka does not allow
+to do this.
 
-  > Is it fast and can run thouthands of unit tests in milliseconds?
+Correct example:
 
-  I don't think so. Also `moka` is memory consumptive because it stores history
-  of all stubbed methods calls in static classes. This will change in future.
+```
+$class = \shagabutdinov\Moka::mockClass('\shagabutdinov\Moka', ['spy' => 'MySpy']);
+$class::spy('ARG');
+$class::$moka->report('spy'); // [['ARG']]
+```
 
-  > Is it stable and suitable for production use?
+> Is it fast and can run thouthands of unit tests in milliseconds?
 
-  No. We need some time to test it carefully and fix last bugs in order to make
-  `moka` stable. You can help us to do that by trying `moka` and opening issues.
+I don't think so. Also `moka` is memory consumptive because it stores history
+of all stubbed methods calls in static classes. This will change in future.
 
-  > How can I contribute?
+> Is it stable and suitable for production use?
 
-  Open a pull request; don't forget to put yourself in authors. All tests should
-  pass. Phpcs should not display any warnings.
+No. We need some time to test it carefully and fix last bugs in order to make
+`moka` stable. You can help us to do that by trying `moka` and opening issues.
+
+> How can I contribute?
+
+Open a pull request:
+
+* don't forget to put yourself in authors
+* all tests should pass
+* phpcs should not display any warnings
+* pull request branch should contains only one commit
+* pull request branch should starts from master
 
 
 Similar projects

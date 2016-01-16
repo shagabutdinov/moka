@@ -4,11 +4,11 @@ namespace shagabutdinov;
 
 class MokaTest extends \PHPUnit_Framework_TestCase
 {
-    const HELPER = 'shagabutdinov\MokaTest_Helper';
+    const HELPER = 'shagabutdinov\MokaTestHelper';
 
     public function setUp()
     {
-        $this->_helper = new MokaTest_Stub();
+        $this->_helper = new MokaTestStub();
     }
 
     private function _stubClass($parent, $methods = [])
@@ -56,13 +56,13 @@ class MokaTest extends \PHPUnit_Framework_TestCase
     public function testStubRetunsMoka()
     {
         $stub = $this->_stub(self::HELPER);
-        $this->assertInstanceOf('\shagabutdinov\MokaTest_Stub', $stub->moka());
+        $this->assertInstanceOf('\shagabutdinov\MokaTestStub', $stub->moka());
     }
 
     public function testClassRetunsMoka()
     {
         $class = $this->_stubClass(self::HELPER, ['call']);
-        $this->assertInstanceOf('\shagabutdinov\MokaTest_Stub', $class::$moka);
+        $this->assertInstanceOf('\shagabutdinov\MokaTestStub', $class::$moka);
     }
 
     // stub instance methods
@@ -218,10 +218,9 @@ class MokaTest extends \PHPUnit_Framework_TestCase
         $mock = $this->_mock(self::HELPER, ['methodWithNull' => true]);
         $this->assertEquals('INVOKE', $mock->methodWithNull());
     }
-
 }
 
-class MokaTest_Helper
+class MokaTestHelper
 {
     public $args;
 
@@ -252,7 +251,11 @@ class MokaTest_Helper
     {
     }
 
-    public function methodWithType(MokaTest_Helper $result)
+    public function methodWithCallable(callable $result)
+    {
+    }
+
+    public function methodWithReference(&$result)
     {
     }
 
@@ -261,7 +264,8 @@ class MokaTest_Helper
     }
 }
 
-class MokaTest_Stub {
+class MokaTestStub
+{
 
     public $__addInstance = null;
     public $invoke = null;
@@ -288,5 +292,4 @@ class MokaTest_Stub {
         $this->invoke = [$method, $args];
         return 'INVOKE';
     }
-
 }

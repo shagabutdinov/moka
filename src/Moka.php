@@ -53,12 +53,12 @@ class Moka
 
     private static function _setStaticMokaValues($moka, $values)
     {
-        foreach($values as $key => $value) {
-            if(is_numeric($key)) {
+        foreach ($values as $key => $value) {
+            if (is_numeric($key)) {
                 continue;
             }
 
-            if(strpos($key, '::') !== 0) {
+            if (strpos($key, '::') !== 0) {
                 continue;
             }
 
@@ -68,16 +68,16 @@ class Moka
 
     public static function __setMokaValues($moka, $values)
     {
-        foreach($values as $key => $value) {
-            if(is_numeric($key)) {
+        foreach ($values as $key => $value) {
+            if (is_numeric($key)) {
                 continue;
             }
 
-            if(strpos($key, '::') === 0) {
+            if (strpos($key, '::') === 0) {
                 continue;
             }
 
-            if($key === '__construct') {
+            if ($key === '__construct') {
                 continue;
             }
 
@@ -90,7 +90,7 @@ class Moka
         $classCode = self::_createHeader($name, $parent);
 
         $reflection = null;
-        if(!empty($parent)) {
+        if (!empty($parent)) {
             $reflection = new \ReflectionClass($parent);
         }
 
@@ -105,7 +105,7 @@ class Moka
     {
         $classCode = 'class ' . $name;
 
-        if(!empty($parent)) {
+        if (!empty($parent)) {
             $classCode .= ' extends ' . $parent;
         }
 
@@ -125,32 +125,32 @@ DEFINITION;
         $result = '';
         $methods = self::_createInitialMethods($methods);
 
-        if($reflection !== null) {
-            foreach($reflection->getMethods() as $method) {
-                if(!$method->isPublic() || $method->isFinal()) {
+        if ($reflection !== null) {
+            foreach ($reflection->getMethods() as $method) {
+                if (!$method->isPublic() || $method->isFinal()) {
                     continue;
                 }
 
                 $name = $method->getName();
-                if($method->isStatic()) {
+                if ($method->isStatic()) {
                     $name = '::' . $name;
                 }
 
                 $args = self::_createMethodArguments($method);
 
-                if(isset($methods[$name]) || $isStub) {
+                if (isset($methods[$name]) || $isStub) {
                     $methods[$name] = [$name, implode(', ', $args)];
                 }
             }
         }
 
-        foreach($methods as $method) {
+        foreach ($methods as $method) {
             list($name, $args) = $method;
-            if($name === '__construct') {
+            if ($name === '__construct') {
                 continue;
             }
 
-            if(strpos($name, '::') === 0) {
+            if (strpos($name, '::') === 0) {
                 $name = mb_substr($name, 2);
                 $result .= <<<METHOD
 
@@ -185,8 +185,8 @@ METHOD;
     private static function _createInitialMethods($methods)
     {
         $result = [];
-        foreach($methods as $index => $value) {
-            if(is_numeric($index)) {
+        foreach ($methods as $index => $value) {
+            if (is_numeric($index)) {
                 $result[$value] = [$value, ''];
             } else {
                 $result[$index] = [$index, ''];
@@ -200,18 +200,28 @@ METHOD;
     {
         $parameters = $method->getParameters();
         $args = [];
-        foreach($parameters as $parameter) {
+        foreach ($parameters as $parameter) {
             $arg = '$' . $parameter->getName();
+            if ($parameter->isPassedByReference()) {
+                $arg = '&' . $arg;
+            }
 
-            if($parameter->isDefaultValueAvailable()) {
+            if ($parameter->isDefaultValueAvailable()) {
                 $arg .= ' = ' . var_export(
                     $parameter->getDefaultValue(),
                     true
                 );
             }
 
-            if($parameter->hasType()) {
+            // php 7
+            if (method_exists($parameter, 'hasType') && $parameter->hasType()) {
                 $arg = $parameter->getType() . ' ' . $arg;
+            } else { // php <7
+                if ($parameter->isArray()) {
+                    $arg = 'array ' . $arg;
+                } elseif ($parameter->isCallable()) {
+                    $arg = 'callable ' . $arg;
+                }
             }
 
             $args[] = $arg;
@@ -234,7 +244,7 @@ METHOD;
             $reflection->hasMethod('__construct')
         );
 
-        if($hasConstructor) {
+        if ($hasConstructor) {
             $construct = <<<CONSTRUCTOR
 
         \$this->__moka->stubs('__construct')->returns(null);
@@ -243,7 +253,7 @@ METHOD;
             ['__construct', func_get_args()]
         );
 CONSTRUCTOR;
-        } else if($parentHasConstructor) {
+        } elseif ($parentHasConstructor) {
             $construct = <<<CONSTRUCTOR
 
         call_user_func_array(
@@ -272,5 +282,4 @@ CONSTRUCTOR;
 
         return $result;
     }
-
 }

@@ -7,14 +7,17 @@ class CallTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->_call = new Call(new CallTest_Stub([]), 'METHOD');
+        $this->_call = new Call(new CallTestStub([]), 'METHOD');
     }
 
     // returns
 
     public function testReturnsReturnsCall()
     {
-        $this->assertInstanceOf('shagabutdinov\moka\Call', $this->_call->returns(null));
+        $this->assertInstanceOf(
+            'shagabutdinov\moka\Call',
+            $this->_call->returns(null)
+        );
     }
 
     public function testInvokeReturnsValue()
@@ -27,7 +30,10 @@ class CallTest extends \PHPUnit_Framework_TestCase
 
     public function testWithReturnsCall()
     {
-        $this->assertInstanceOf('shagabutdinov\moka\Call', $this->_call->with('VALUE'));
+        $this->assertInstanceOf(
+            'shagabutdinov\moka\Call',
+            $this->_call->with('VALUE')
+        );
     }
 
     public function testInvokeWithReturnsValue()
@@ -66,20 +72,31 @@ class CallTest extends \PHPUnit_Framework_TestCase
 
     public function testOnReturnsCall()
     {
-        $this->assertInstanceOf('shagabutdinov\moka\Call',
-            $this->_call->on(function() { return true; }));
+        $callback = function () {
+            return true;
+        };
+
+        $this->assertInstanceOf(
+            'shagabutdinov\moka\Call',
+            $this->_call->on($callback)
+        );
     }
 
     public function testInvokeWithOnReturnsValue()
     {
-        $result = $this->_call->on(function() { return true; })->
-            returns('VALUE')->invoke([]);
+        $callback = function () {
+            return true;
+        };
+
+        $result = $this->_call->on($callback)->returns('VALUE')->invoke([]);
         $this->assertEquals([true, 'VALUE'], $result);
     }
 
     public function testInvokeWithOnNotReturnsValue()
     {
-        $result = $this->_call->on(function() { return false; })->
+        $result = $this->_call->on(function () {
+            return false;
+        })->
             returns('VALUE')->invoke([]);
         $this->assertEquals([false, null], $result);
     }
@@ -88,34 +105,55 @@ class CallTest extends \PHPUnit_Framework_TestCase
 
     public function testCallReturnsCall()
     {
-        $this->assertInstanceOf('shagabutdinov\moka\Call',
-            $this->_call->calls(function() { return true; }));
+        $this->assertInstanceOf(
+            'shagabutdinov\moka\Call',
+            $this->_call->calls(function () {
+                return true;
+            })
+        );
     }
 
     public function testInvokeWithCallReturnsValue()
     {
-        $result = $this->_call->calls(function() { return 'RES'; })->invoke([]);
+        $result = $this->_call->calls(function () {
+            return 'RES';
+
+        })->invoke([]);
         $this->assertEquals([true, 'RES'], $result);
     }
 
     public function testInvokeWithCallAndReturnsThrowError()
     {
-        $this->setExpectedException('\shagabutdinov\moka\Error',
-            'can not use "returns()" and "calls()" together');
-        $result = $this->_call->calls(function() {})->returns('RESULT');
+        $this->setExpectedException(
+            '\shagabutdinov\moka\Error',
+            'can not use "returns()" and "calls()" together'
+        );
+
+        $callback = function () {
+
+        };
+
+        $result = $this->_call->calls($callback)->returns('RESULT');
     }
 
     public function testInvokeWithReturnsAndCallThrowError()
     {
-        $this->setExpectedException('\shagabutdinov\moka\Error',
-            'can not use "calls()" and "returns()" together');
-        $result = $this->_call->returns('RESULT')->calls(function() {});
-     }
+        $this->setExpectedException(
+            '\shagabutdinov\moka\Error',
+            'can not use "calls()" and "returns()" together'
+        );
 
+        $callback = function () {
+
+        };
+
+        $result = $this->_call->returns('RESULT')->calls($callback);
+    }
 }
 
 
-class CallTest_Stub {
+class CallTestStub
+{
 
     public $calls = null;
 
@@ -128,5 +166,4 @@ class CallTest_Stub {
     {
         return $this->calls;
     }
-
 }

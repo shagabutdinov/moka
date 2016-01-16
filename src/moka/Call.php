@@ -18,7 +18,7 @@ class Call
 
     public function returns($value)
     {
-        if(!empty($this->_calls)) {
+        if (!empty($this->_calls)) {
             throw new Error('can not use "returns()" and "calls()" together');
         }
 
@@ -52,7 +52,7 @@ class Call
 
     public function calls($callback)
     {
-        if(!empty($this->_returns)) {
+        if (!empty($this->_returns)) {
             throw new Error('can not use "calls()" and "returns()" together');
         }
 
@@ -62,23 +62,22 @@ class Call
 
     public function invoke($args)
     {
-        if($this->_with !== null && $this->_with !== $args) {
+        if ($this->_with !== null && $this->_with !== $args) {
             return [false, null];
         }
 
-        if($this->_at !== null && $this->_at !== count($this->_stub->calls())) {
+        if ($this->_at !== null && $this->_at !== count($this->_stub->calls())) {
             return [false, null];
         }
 
-        if($this->_on !== null && !($this->_on)()) {
+        if ($this->_on !== null && !call_user_func_array($this->_on, [])) {
             return [false, null];
         }
 
-        if($this->_calls !== null) {
-            return [true, ($this->_calls)()];
+        if ($this->_calls !== null) {
+            return [true, call_user_func_array($this->_calls, [])];
         }
 
         return [true, $this->_returns];
     }
-
 }

@@ -4,7 +4,6 @@ namespace shagabutdinov\moka;
 
 class Stub
 {
-
     private $_stubs = [];
     private $_calls = [];
     private $_method = null;
@@ -21,9 +20,9 @@ class Stub
 
     public function invoke($args)
     {
-        foreach(array_reverse($this->_stubs) as $stub) {
+        foreach (array_reverse($this->_stubs) as $stub) {
             list($invoked, $result) = $stub->invoke($args);
-            if($invoked) {
+            if ($invoked) {
                 $this->_calls[] = $args;
                 return $result;
             }
@@ -37,5 +36,4 @@ class Stub
     {
         return $this->_calls;
     }
-
 }

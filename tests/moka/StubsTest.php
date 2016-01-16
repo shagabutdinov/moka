@@ -7,15 +7,15 @@ class StubsTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->_stub = new \shagabutdinov\moka\StubsTest_Stub();
-        $this->_call = new \shagabutdinov\moka\StubsTest_Call();
+        $this->_stub = new \shagabutdinov\moka\StubsTestStub();
+        $this->_call = new \shagabutdinov\moka\StubsTestCall();
 
         $this->_object = new Stubs([
-            'create_stub_class' => function($method) {
+            'create_stub_class' => function ($method) {
                 $this->_stub->method = $method;
                 return $this->_stub;
             },
-            'create_call_class' => function($stub) {
+            'create_call_class' => function ($stub) {
                 $this->_call->stub = $stub;
                 return $this->_call;
             },
@@ -31,8 +31,10 @@ class StubsTest extends \PHPUnit_Framework_TestCase
     public function testStubsCallsAddMethod()
     {
         $this->_object->stubs('METHOD');
-        $this->assertInstanceOf('shagabutdinov\moka\StubsTest_Call',
-            $this->_stub->add);
+        $this->assertInstanceOf(
+            'shagabutdinov\moka\StubsTestCall',
+            $this->_stub->add
+        );
     }
 
     public function testStubsCreateCallObjectWithMethod()
@@ -43,8 +45,11 @@ class StubsTest extends \PHPUnit_Framework_TestCase
 
     public function testInvokeThrowsIfNoStubDefined()
     {
-        $this->setExpectedException('\shagabutdinov\moka\Error',
-            'method "METHOD" is not stubbed');
+        $this->setExpectedException(
+            '\shagabutdinov\moka\Error',
+            'method "METHOD" is not stubbed'
+        );
+
         $this->_object->invoke('METHOD', []);
     }
 
@@ -57,8 +62,11 @@ class StubsTest extends \PHPUnit_Framework_TestCase
 
     public function testGetInstanceThrowsError()
     {
-        $this->setExpectedException('\shagabutdinov\moka\Error',
-            'instance #0 was not created');
+        $this->setExpectedException(
+            '\shagabutdinov\moka\Error',
+            'instance #0 was not created'
+        );
+
         $this->_object->instance();
     }
 
@@ -67,10 +75,9 @@ class StubsTest extends \PHPUnit_Framework_TestCase
         $this->_object->__addInstance('INSTANCE');
         $this->assertEquals('INSTANCE', $this->_object->instance());
     }
-
 }
 
-class StubsTest_Stub
+class StubsTestStub
 {
     public $method;
     public $add;
@@ -99,11 +106,9 @@ class StubsTest_Stub
     {
         return 'CALLS';
     }
-
 }
 
-class StubsTest_Call
+class StubsTestCall
 {
     public $stub;
-
 }

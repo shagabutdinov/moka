@@ -1,11 +1,17 @@
 guard :shell do
-  COMMAND = 'phpunit --bootstrap tests/bootstrap.php'
+  PHPUNIT = 'phpunit --bootstrap tests/bootstrap.php'
 
   watch(/^tests\/.*Test\.php/) { |match|
-    system("#{COMMAND} #{match[0]}")
+    system("#{PHPUNIT} #{match[0]}")
   }
 
   watch(/^src\/(.*).php$/) { |match|
-    system("#{COMMAND} tests/#{match[1]}Test.php")
+    system("#{PHPUNIT} tests/#{match[1]}Test.php")
+  }
+
+  PHPCS = 'phpcs --standard=phpcs.xml '
+
+  watch(/^(src|tests)\/(.*).php$/) { |match|
+    system("#{PHPCS} #{match[1]}/#{match[2]}.php")
   }
 end

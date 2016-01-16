@@ -4,8 +4,15 @@
   bootstrap="tests/bootstrap.php">
 
   <testsuites>
-    <testsuite name="lala">
+    <testsuite>
       <directory>tests/</directory>
+      <exclude>tests/moka/readme</exclude>
+      <exclude>tests/moka/php7</exclude>
+    </testsuite>
+
+    <testsuite name="php7">
+      <directory phpVersion="7" phpVersionOperator=">=">tests/moka/readme</directory>
+      <directory phpVersion="7" phpVersionOperator=">=">tests/moka/php7</directory>
     </testsuite>
   </testsuites>
 

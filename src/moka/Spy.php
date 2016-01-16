@@ -7,14 +7,14 @@ class Spy
 
     public static function factory($result = '__UNDEFINED__')
     {
-        return new self($result ,['stubs' => Stubs::factory()]);
+        return new self($result, ['stubs' => Stubs::factory()]);
     }
 
     public function __construct($result = '__UNDEFINED__', $options = [])
     {
         $this->_stubs = $options['stubs'];
 
-        if($result !== '__UNDEFINED__') {
+        if ($result !== '__UNDEFINED__') {
             $this->stubs()->returns($result);
         }
     }
@@ -36,5 +36,4 @@ class Spy
             ['invoke', func_get_args()]
         );
     }
-
 }
